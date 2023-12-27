@@ -20,7 +20,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rm -rf ./exports/**/*.d.ts && tsc",
+    "clean": "rimraf -g \"./exports/**/*.d.ts\" \"./internal/**/*.d.ts\"",
+    "build": "npm run clean && tsc",
     "deploy:patch": "npm run build && npm version patch && npm publish && git push --follow-tags",
     "deploy:minor": "npm run build && npm version minor && npm publish && git push --follow-tags",
     "deploy:major": "npm run build && npm version major && npm publish && git push --follow-tags",
@@ -41,7 +42,7 @@
     "access": "public"
   },
   "devDependencies": {
-     "<projectName>": "link:." 
+     "<projectName>": "link:."
   }
-  
+
 }
