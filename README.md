@@ -6,7 +6,7 @@ cd my-project-name
 git clone https://github.com/konnorrogers/npm-starter . --depth 1
 rm -rf .git
 git init
-pnpm install -D @web/test-runner @open-wc/testing-helpers @web/test-runner-playwright typescript rimraf
+pnpm install -D @web/test-runner @open-wc/testing-helpers @web/test-runner-playwright typescript rimraf @esm-bundle/chai
 ```
 
 ## Structure
