@@ -1,5 +1,5 @@
 {
-  "name": "<projectName>",
+  "name": "projectName",
   "version": "1.0.0",
   "description": "A variety of simple components that match an aria-role",
   "main": "./exports/index.js",
@@ -21,11 +21,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rimraf -g \"./exports/**/*.d.ts\" \"./internal/**/*.d.ts\"",
-    "build": "npm run clean && tsc",
     "deploy:patch": "npm run build && npm version patch && npm publish && git push --follow-tags",
     "deploy:minor": "npm run build && npm version minor && npm publish && git push --follow-tags",
     "deploy:major": "npm run build && npm version major && npm publish && git push --follow-tags",
+    "clean": "rimraf -g \"./{exports,internal}/**/!(*-globals|*-types).d.ts\"",
+    "build": "npm run clean && tsc && npm run build:cem",
+    "create:component": "plop --plopfile scripts/plop/plopfile.js",
     "test": "web-test-runner"
   },
   "keywords": [
@@ -33,17 +34,17 @@
     "aria"
   ],
   "license": "MIT",
-  "repository": "git@github.com:KonnorRogers/<projectName>.git",
+  "repository": "git@github.com:KonnorRogers/projectName.git",
   "bugs": {
-    "url": "https://github.com/KonnorRogers/<projectName>/issues"
+    "url": "https://github.com/KonnorRogers/projectName/issues"
   },
-  "homepage": "https://github.com/KonnorRogers/<projectName>",
+  "homepage": "https://github.com/KonnorRogers/projectName",
   "author": "KonnorRogers <konnor5456@gmail.com>",
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-     "<projectName>": "link:."
+     "projectName": "link:."
   }
 
 }
