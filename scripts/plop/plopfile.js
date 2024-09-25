@@ -1,4 +1,5 @@
 import { readdirSync } from "fs";
+import { fdir } from "fdir"
 import * as process from "process";
 import * as path from "path";
 
@@ -98,14 +99,49 @@ export default function (plop) {
     ],
   });
 
-  plop.setGenerator("rename-package", {
-    description: "Generate a new component",
-    prompts: [
-      {
-        type: "input",
-        name: "tag",
-        message: `Tag name? (e.g. ${componentPrefix}button)`,
+  plop.setGenerator("rename-package", function (data) {
+    console.warn(`Renaming a package is a one time process. This process cannot be repeated.`)
+
+    const files = new fdir({
+      includeDirs: false,
+      exclude (dirName, dirPath) {
+        if (dirPath.includes("/node_modules/")) {
+          return true
+        }
+
+        if (dirName.includes("/node_modules/")) {
+          return true
+        }
+
+        return false
       }
-    ]
+    })
+    .withBasePath()
+    .crawl(".")
+
+    console.log(files)
+
+    const actions = []
+    actions.push({
+      type: "modify",
+      path: filePath,
+      transform(fileContents, data) {
+        console.log(plop.renderString(fileContents, data))
+
+        return fileContents
+      }
+    })
+
+    return {
+      description: "Change the package name",
+      prompts: [
+        {
+          type: "input",
+          name: "packageName",
+          message: `Choose a package name (ex. do-the-roar)`,
+        }
+      ],
+      actions
+    }
   })
 }
