@@ -35,9 +35,9 @@ function renamePackage () {
       type: "modify",
       path: filePath,
       transform(fileContents, data) {
-        console.log(plop.renderString(fileContents, data))
+        return plop.renderString(fileContents, data)
 
-        return fileContents
+        // return fileContents
       }
     })
   })
