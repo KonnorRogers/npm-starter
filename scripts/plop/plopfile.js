@@ -97,4 +97,15 @@ export default function (plop) {
       },
     ],
   });
+
+  plop.setGenerator("rename-package", {
+    description: "Generate a new component",
+    prompts: [
+      {
+        type: "input",
+        name: "tag",
+        message: `Tag name? (e.g. ${componentPrefix}button)`,
+      }
+    ]
+  })
 }
