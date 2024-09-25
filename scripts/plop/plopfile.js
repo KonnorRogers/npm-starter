@@ -8,6 +8,53 @@ const getDirectories = (source) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
+
+function renamePackage () {
+  const actions = []
+
+  const files = new fdir({
+    includeDirs: false,
+    exclude (dirName, dirPath) {
+      if (dirPath.includes("node_modules/") || dirPath.includes(".git/")) {
+        return true
+      }
+
+      if (dirName.includes("node_modules/") || dirName.includes(".git/")) {
+        return true
+      }
+
+      return false
+    }
+  })
+  .withBasePath()
+  .crawl(".")
+  .sync()
+
+  files.forEach((filePath) => {
+    actions.push({
+      type: "modify",
+      path: filePath,
+      transform(fileContents, data) {
+        console.log(plop.renderString(fileContents, data))
+
+        return fileContents
+      }
+    })
+  })
+
+  return {
+    description: "Change the package name",
+    prompts: [
+      {
+        type: "input",
+        name: "packageName",
+        message: `Choose a package name (ex. do-the-roar). WARNING: this is a one time process and is not repeatable.`,
+      }
+    ],
+    actions
+  }
+}
+
 export default function (plop) {
   const componentPrefix = "";
 
@@ -99,49 +146,6 @@ export default function (plop) {
     ],
   });
 
-  plop.setGenerator("rename-package", function (data) {
-    console.warn(`Renaming a package is a one time process. This process cannot be repeated.`)
 
-    const files = new fdir({
-      includeDirs: false,
-      exclude (dirName, dirPath) {
-        if (dirPath.includes("/node_modules/")) {
-          return true
-        }
-
-        if (dirName.includes("/node_modules/")) {
-          return true
-        }
-
-        return false
-      }
-    })
-    .withBasePath()
-    .crawl(".")
-
-    console.log(files)
-
-    const actions = []
-    actions.push({
-      type: "modify",
-      path: filePath,
-      transform(fileContents, data) {
-        console.log(plop.renderString(fileContents, data))
-
-        return fileContents
-      }
-    })
-
-    return {
-      description: "Change the package name",
-      prompts: [
-        {
-          type: "input",
-          name: "packageName",
-          message: `Choose a package name (ex. do-the-roar)`,
-        }
-      ],
-      actions
-    }
-  })
+  plop.setGenerator("rename-package", renamePackage())
 }
