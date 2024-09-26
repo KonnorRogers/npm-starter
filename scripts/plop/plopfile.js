@@ -54,14 +54,13 @@ function renamePackage (plop) {
   .sync()
 
   files.forEach((filePath) => {
-    console.log(filePath)
     actions.push({
       type: "modify",
       path: filePath,
       transform(fileContents, data) {
-        // return plop.renderString(fileContents, data)
+        return plop.renderString(fileContents, data)
 
-        return fileContents
+        // return fileContents
       }
     })
   })
