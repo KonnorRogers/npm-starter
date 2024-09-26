@@ -3,23 +3,37 @@ import { fdir } from "fdir"
 import * as process from "process";
 import * as path from "path";
 
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
 const getDirectories = (source) =>
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
 
-function renamePackage () {
+function renamePackage (plop) {
   const actions = []
+
+  let basePath = path.join(__dirname, "..", "..")
+  // basePath = path.relative(basePath, basePath)
+  console.log(basePath)
 
   const files = new fdir({
     includeDirs: false,
     exclude (dirName, dirPath) {
-      if (dirPath.includes("node_modules/") || dirPath.includes(".git/")) {
+      const excludedDirs = [
+        "node_modules/",
+        ".git/",
+        "docs/src/shoelace-assets/assets/icons/",
+        // "./",
+        // "../"
+      ]
+      if (excludedDirs.some((str) => dirPath.includes(str))) {
         return true
       }
 
-      if (dirName.includes("node_modules/") || dirName.includes(".git/")) {
+      if (excludedDirs.some((str) => dirName.includes(str))) {
         return true
       }
 
@@ -27,7 +41,7 @@ function renamePackage () {
     }
   })
   .withBasePath()
-  .crawl(".")
+  .crawl(basePath)
   .sync()
 
   files.forEach((filePath) => {
@@ -35,9 +49,9 @@ function renamePackage () {
       type: "modify",
       path: filePath,
       transform(fileContents, data) {
-        return plop.renderString(fileContents, data)
+        // return plop.renderString(fileContents, data)
 
-        // return fileContents
+        return fileContents
       }
     })
   })
@@ -147,5 +161,5 @@ export default function (plop) {
   });
 
 
-  plop.setGenerator("rename-package", renamePackage())
+  plop.setGenerator("rename-package", renamePackage(plop))
 }
