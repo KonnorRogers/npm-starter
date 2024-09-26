@@ -37,7 +37,12 @@ function renamePackage (plop) {
         return true
       }
 
-      if (dirPath.match(/\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx)$/)) {
+      const excludedExtensions = /\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx|hbs)$/
+      if (dirPath.match(excludedExtensions)) {
+        return true
+      }
+
+      if (dirName.match(excludedExtensions)) {
         return true
       }
 
@@ -49,6 +54,7 @@ function renamePackage (plop) {
   .sync()
 
   files.forEach((filePath) => {
+    console.log(filePath)
     actions.push({
       type: "modify",
       path: filePath,
