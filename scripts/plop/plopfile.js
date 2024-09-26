@@ -37,6 +37,10 @@ function renamePackage (plop) {
         return true
       }
 
+      if (dirPath.match(/\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx)$/)) {
+        return true
+      }
+
       return false
     }
   })
