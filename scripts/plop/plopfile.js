@@ -46,9 +46,13 @@ function renamePackage (plop) {
   .sync()
 
   files.forEach((filePath) => {
-    const excludedExtensions = /\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx|hbs)$/
+    const excludedExtensions = /\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx|hbs|yaml|yml)$/
 
     if (filePath.match(excludedExtensions)) {
+      return
+    }
+
+    if (filePath.endsWith("plopfile.js")) {
       return
     }
 
