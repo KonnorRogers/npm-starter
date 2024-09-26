@@ -1,11 +1,84 @@
 import { readdirSync } from "fs";
+import { fdir } from "fdir"
 import * as process from "process";
 import * as path from "path";
+
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const getDirectories = (source) =>
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
+
+
+function renamePackage (plop) {
+  const actions = []
+
+  let basePath = path.join(__dirname, "..", "..")
+  // basePath = path.relative(basePath, basePath)
+  console.log(basePath)
+
+  const files = new fdir({
+    includeDirs: false,
+    exclude (dirName, dirPath) {
+      const excludedDirs = [
+        "node_modules/",
+        ".git/",
+        "docs/src/shoelace-assets/assets/icons/",
+        // "./",
+        // "../"
+      ]
+      if (excludedDirs.some((str) => dirPath.includes(str))) {
+        return true
+      }
+
+      if (excludedDirs.some((str) => dirName.includes(str))) {
+        return true
+      }
+
+
+      return false
+    }
+  })
+  .withBasePath()
+  .crawl(basePath)
+  .sync()
+
+  files.forEach((filePath) => {
+    const excludedExtensions = /\.(png|jpeg|jpg|svg|ico|gif|woff|woff2|ttf|otf|doc|docx|hbs|yaml|yml)$/
+
+    if (filePath.match(excludedExtensions)) {
+      return
+    }
+
+    if (filePath.endsWith("plopfile.js")) {
+      return
+    }
+
+    actions.push({
+      type: "modify",
+      path: filePath,
+      transform(fileContents, data) {
+        return plop.renderString(fileContents, data)
+
+        // return fileContents
+      }
+    })
+  })
+
+  return {
+    description: "Change the package name",
+    prompts: [
+      {
+        type: "input",
+        name: "packageName",
+        message: `Choose a package name (ex. do-the-roar). WARNING: this is a one time process and is not repeatable.`,
+      }
+    ],
+    actions
+  }
+}
 
 export default function (plop) {
   const componentPrefix = "";
@@ -97,4 +170,7 @@ export default function (plop) {
       },
     ],
   });
+
+
+  plop.setGenerator("rename-package", renamePackage(plop))
 }
