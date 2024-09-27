@@ -1,7 +1,8 @@
-import { readdirSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { fdir } from "fdir"
 import * as process from "process";
 import * as path from "path";
+
 
 import * as url from 'url';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -12,12 +13,10 @@ const getDirectories = (source) =>
     .map((dirent) => dirent.name);
 
 
+const rootDir = path.join(__dirname, "..", "..")
+
 function renamePackage (plop) {
   const actions = []
-
-  let basePath = path.join(__dirname, "..", "..")
-  // basePath = path.relative(basePath, basePath)
-  console.log(basePath)
 
   const files = new fdir({
     includeDirs: false,
@@ -42,7 +41,7 @@ function renamePackage (plop) {
     }
   })
   .withBasePath()
-  .crawl(basePath)
+  .crawl(rootDir)
   .sync()
 
   files.forEach((filePath) => {
@@ -121,55 +120,60 @@ export default function (plop) {
         },
       },
     ],
-    actions: [
-      {
-        type: "add",
-        path: "../../exports/components/{{ tag }}/{{ tag }}-register.js",
-        templateFile: "templates/component-register.hbs",
-      },
-      {
-        type: "add",
-        path: "../../exports/components/{{ tag }}/{{ tag }}-globals.ts",
-        templateFile: "templates/component-globals.hbs",
-      },
-      {
-        type: "add",
-        path: "../../exports/components/{{ tag }}/{{ tag }}.js",
-        templateFile: "templates/component.hbs",
-      },
-      {
-        type: "add",
-        path: "../../exports/components/{{ tag }}/{{ tag }}.styles.js",
-        templateFile: "templates/component-styles.hbs",
-      },
-      {
-        type: "add",
-        path: "../../tests/{{ tag }}.test.js",
-        templateFile: "templates/component-tests.hbs",
-      },
-      {
-        type: "add",
-        path: "../../docs/src/_documentation/components/{{ tag }}.md",
-        templateFile: "templates/component-docs.hbs",
-      },
-      {
-        type: "modify",
-        path: "../../exports/index.js",
-        transform(fileContents, data) {
-          const properCase = plop.getHelper("properCase");
-          const directories = getDirectories(
-            path.resolve(process.cwd(), "exports", "components"),
-          );
-          const contents = directories.sort().map((directoryName) => {
-            // const componentPath = tagWithoutPrefix(directoryName)
-            const componentPath = directoryName;
-            return `export { default as ${properCase(directoryName)} } from "./components/${componentPath}/${componentPath}-register.js"`;
-          });
-          return contents.join("\n");
+    actions: function (data) {
+      data.packageName = JSON.parse(readFileSync(path.join(rootDir, "package.json")))["name"]
+      return [
+        {
+          type: "add",
+          path: "../../exports/components/{{ tag }}/{{ tag }}-register.js",
+          templateFile: "templates/component-register.hbs",
         },
-      },
-    ],
+        {
+          type: "add",
+          path: "../../exports/components/{{ tag }}/{{ tag }}-globals.ts",
+          templateFile: "templates/component-globals.hbs",
+        },
+        {
+          type: "add",
+          path: "../../exports/components/{{ tag }}/{{ tag }}.js",
+          templateFile: "templates/component.hbs",
+        },
+        {
+          type: "add",
+          path: "../../exports/components/{{ tag }}/{{ tag }}.styles.js",
+          templateFile: "templates/component-styles.hbs",
+        },
+        {
+          type: "add",
+          path: "../../tests/{{ tag }}.test.js",
+          templateFile: "templates/component-tests.hbs",
+        },
+        {
+          type: "add",
+          path: "../../docs/src/_documentation/components/{{ tag }}.md",
+          templateFile: "templates/component-docs.hbs",
+        },
+        {
+          type: "modify",
+          path: "../../exports/index.js",
+          transform(fileContents, data) {
+            const properCase = plop.getHelper("properCase");
+            const directories = getDirectories(
+              path.resolve(process.cwd(), "exports", "components"),
+            );
+            const contents = directories.sort().map((directoryName) => {
+              // const componentPath = tagWithoutPrefix(directoryName)
+              const componentPath = directoryName;
+              return `export { default as ${properCase(directoryName)} } from "./components/${componentPath}/${componentPath}-register.js"`;
+            });
+            return contents.join("\n");
+          },
+        }
+      ]
+    }
   });
+
 
   plop.setGenerator("rename-package", renamePackage(plop))
 }
+
