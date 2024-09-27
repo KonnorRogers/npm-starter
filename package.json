@@ -92,6 +92,7 @@
   },
   "customElements": "custom-elements.json",
   "dependencies": {
-    "lit": "^3.2.0"
+    "lit": "^3.2.0",
+    "web-component-define": "^2.0.11"
   }
 }

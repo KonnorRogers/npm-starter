@@ -1,2 +1,1 @@
-import { version } from "../internal/version.js"
-console.log(version)
+export { default as ExampleComponent } from "./components/example-component/example-component-register.js"
