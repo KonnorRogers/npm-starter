@@ -22,49 +22,82 @@ class Builders::ComponentGenerator < SiteBuilder
     # end
 
     generator do
-      custom_elements_manifest_path = File.read(File.expand_path("../../../custom-elements.json", __dir__))
-      manifest = JSON.parse(custom_elements_manifest_path)
+      hook(:site, :after_init) { generate_component_data }
+      hook(:site, :after_reset) { generate_component_data }
+      hook(:site, :after_soft_reset) { generate_component_data }
 
-      parser = CustomElementsManifestParser.parse(manifest)
-      elements = parser.find_all_tag_names
+      generate_component_data
+    end
+  end
 
-      resources = site.collections.documentation.resources
+  def generate_component_data
+    custom_elements_manifest_path = File.expand_path("../../../custom-elements.json", __dir__)
 
-      resources.each do |resource|
-        component_name = File.basename(resource.relative_path.basename, ".md").to_s
+    if !File.exist?(custom_elements_manifest_path)
+      root = File.expand_path("../../../", __dir__)
+      `cd #{root} && pnpm run build:cem`
+    end
 
-        metadata = elements[component_name]
-        next if metadata.nil?
+    manifest = JSON.parse(File.read(custom_elements_manifest_path))
 
-        resource.data.merge!({
-          "summary" => metadata.summary,
-          "description" => metadata.description
-        })
+    def find_all_tag_names(json)
+      custom_elements = {}
 
-        path = metadata.parent_module.path
-        import_name = metadata.parent_module.exports.find { |hash| hash.name == "default" }.declaration.name
+      json["modules"].flatten.each do |mod|
+        parent_module = mod
+        mod["declarations"].flatten.each do |dec|
+          # Needs to be != true because == false fails nil checks.
+          next if dec["customElement"] != true
 
-        tag_name = metadata.tagName
+          tag_name = dec["tagName"]
 
-        slots = metadata.slots
-        attributes = metadata.members.select { |member| member.attributes[:attribute] }
-        events = metadata.events
-
-        # Use functions instead of methods so we don't clobber built-in #methods method.
-        functions = metadata.members.select { |member| member.kind == "method" }
-
-        parts = metadata.cssParts
-
-        resource.content += [
-          "## API Reference\n\n".html_safe,
-          import_tabs(path, import_name, tag_name).html_safe,
-          slots_table(slots).html_safe,
-          attributes_table(attributes).html_safe,
-          events_table(events).html_safe,
-          functions_table(functions).html_safe,
-          parts_table(parts).html_safe
-        ].join("\n\n")
+          custom_elements[tag_name] = dec if tag_name
+          dec["parent_module"] = parent_module
+        end
       end
+
+      custom_elements
+    end
+
+    elements = find_all_tag_names(manifest)
+
+    resources = site.collections.documentation.resources
+
+    resources.each do |resource|
+      component_name = File.basename(resource.relative_path.basename, ".md").to_s
+
+      metadata = elements["role-" + component_name]
+
+      next if metadata.nil?
+
+      resource.data.merge!({
+        "summary" => metadata["summary"],
+        "description" => metadata["description"]
+      })
+
+      path = metadata["parent_module"]["path"]
+      import_name = metadata["parent_module"]["exports"].find { |hash| hash["name"] == "default" }["declaration"]["name"]
+
+      tag_name = metadata["tagName"]
+
+      slots = metadata["slots"]
+      attributes = metadata["attributes"]
+      events = metadata["events"]
+
+      # Use functions instead of methods so we don't clobber built-in #methods method.
+      functions = metadata["members"].select { |member| member["kind"] == "method" }
+
+      parts = metadata["cssParts"]
+
+      resource.content += [
+        "## API Reference\n\n".html_safe,
+        import_tabs(path, import_name, tag_name).html_safe,
+        slots_table(slots).html_safe,
+        attributes_table(attributes).html_safe,
+        events_table(events).html_safe,
+        functions_table(functions).html_safe,
+        parts_table(parts).html_safe
+      ].join("\n\n")
     end
   end
 
@@ -77,11 +110,11 @@ class Builders::ComponentGenerator < SiteBuilder
   end
 
   def unchecked_property
-    "<sl-icon name='x-lg' style='text-align: center; display: flex; margin: 0 auto; color: var(--sl-color-danger-600);'></sl-icon>"
+    "<sl-icon name='x-lg' style='text-align: center; display: flex; margin: 0 auto; color: var(--sl-color-danger-600);' label='No'></sl-icon>"
   end
 
   def checked_property
-    "<sl-icon name='check-lg' style='font-size: 1.25em; text-align: center; display: flex; margin: 0 auto; color: var(--sl-color-success-700);'></sl-icon>"
+    "<sl-icon name='check-lg' style='font-size: 1.25em; text-align: center; display: flex; margin: 0 auto; color: var(--sl-color-success-700);' label='Yes'></sl-icon>"
   end
 
   def import_tabs(path, import_name, tag_name)
@@ -98,7 +131,7 @@ class Builders::ComponentGenerator < SiteBuilder
     script = <<~MD
       ```html
       <!-- Auto registers as <#{tag_name}> -->
-      <script type="module" src="https://cdn.jsdelivr.net/npm/#{package_name}/cdn/#{path_without_ext}-register.js"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/#{package_name}/#{path_without_ext}-register.js"></script>
       ```
     MD
 
@@ -106,10 +139,10 @@ class Builders::ComponentGenerator < SiteBuilder
       ```html
       <script type="module">
         // Auto registers as <#{tag_name}>
-        import "https://cdn.jsdelivr.net/npm/#{package_name}/cdn/#{path_without_ext}-register.js"
+        import "https://cdn.jsdelivr.net/npm/#{package_name}/#{path_without_ext}-register.js"
 
         // Manual Register
-        import #{import_name} from "https://cdn.jsdelivr.net/npm/#{package_name}/cdn/#{path}"
+        import #{import_name} from "https://cdn.jsdelivr.net/npm/#{package_name}/#{path}"
         #{import_name}.define()
         // => Registers as <#{tag_name}>
       </script>
@@ -154,10 +187,10 @@ class Builders::ComponentGenerator < SiteBuilder
       <<~HTML
         <tr>
           <td>
-            <code>#{slot.name}</code>
+            <code>#{slot["name"]}</code>
           </td>
           <td>
-            #{slot.description.to_s.empty? ? empty_property : markdownify(slot.description)}
+            #{slot["description"].to_s.empty? ? empty_property : markdownify(slot["description"])}
           </td>
         </tr>
       HTML
@@ -188,40 +221,40 @@ class Builders::ComponentGenerator < SiteBuilder
     tbody = members.map do |member|
       type_text = ""
 
-      type_text = member.type.text if member.type && member.type.text
+      type_text = member["type"]["text"] if member["type"] && member["type"]["text"]
 
       <<~HTML
         <tr>
           <td>
-            <% if "#{member.attribute}" != "#{member.name}" %>
+            <% if "#{member["attribute"]}" != "#{member["name"]}" %>
               <small>[Attribute]</small>
               <br>
-              <code>#{member.attribute}</code>
+              <code>#{member["attribute"]}</code>
               <br><br>
               <small>[Property]</small>
               <br>
-              <code>#{member.name}</code>
-            <% elsif not("#{member.attribute}".blank?) %>
+              <code>#{member["name"]}</code>
+            <% elsif not("#{member["attribute"]}".blank?) %>
               <small>[Attribute + Property]</small>
               <br>
-              <code>#{member.attribute}</code>
+              <code>#{member["attribute"]}</code>
             <% else %>
               <small>[Property Only]</small>
               <br>
-              <code>#{member.name}</code>
+              <code>#{member["name"]}</code>
             <% end %>
           </td>
           <td>
-            #{member.description.to_s.empty? ? empty_property : markdownify(member.description)}
+            #{member["description"].to_s.empty? ? empty_property : markdownify(member["description"])}
           </td>
           <td>
-            #{member.reflects ? checked_property : unchecked_property}
+            #{member["reflects"] ? checked_property : unchecked_property}
           </td>
           <td>
             #{type_text.blank? ? empty_property : "<code>#{escape(type_text)}</code>"}
           </td>
           <td>
-            #{member.default.nil? ? empty_property : "<code>#{escape(member.default)}</code>"}
+            #{member["default"].nil? ? empty_property : "<code>#{escape(member["default"])}</code>"}
           </td>
         </tr>
       HTML
@@ -256,10 +289,10 @@ class Builders::ComponentGenerator < SiteBuilder
       <<~HTML
         <tr>
           <td>
-            <code>#{event.name}</code>
+            <code>#{event["name"]}</code>
           </td>
           <td>
-            #{event.description.to_s.empty? ? empty_property : markdownify(event.description.to_s)}
+            #{event["description"].to_s.empty? ? empty_property : markdownify(event["description"].to_s)}
           </td>
         </tr>
       HTML
@@ -285,12 +318,12 @@ class Builders::ComponentGenerator < SiteBuilder
   end
 
   def parameter_string(parameter)
-    rest = parameter.rest ? "..." : ""
+    rest = parameter["rest"] ? "..." : ""
     # optional = parameter.optional ? "?" : ""
     type_text = ""
-    type_text = ": " + parameter.type.text if parameter.type && parameter.type.text
+    type_text = ": " + parameter["type"]["text"] if parameter["type"] && parameter["type"]["text"]
 
-    rest + parameter.name + type_text
+    rest + parameter["name"] + type_text
   end
 
   def functions_table(functions)
@@ -298,17 +331,17 @@ class Builders::ComponentGenerator < SiteBuilder
 
     tbody = functions.map do |function|
       parameters = empty_property
-      if not(function.parameters.to_s.empty?)
-        parameters = "<code>" + escape(function.parameters.map { |parameter| parameter_string(parameter) }.join(", ")) + "</code>"
+      if not(function["parameters"].to_s.empty?)
+        parameters = "<code>" + escape(function["parameters"].map { |parameter| parameter_string(parameter) }.join(", ")) + "</code>"
       end
 
       <<~HTML
         <tr>
           <td>
-            <code>#{function.name}()</code>
+            <code>#{function["name"]}()</code>
           </td>
           <td>
-            #{function.description.to_s.empty? ? empty_property : markdownify(function.description.to_s)}
+            #{function["description"].to_s.empty? ? empty_property : markdownify(function["description"].to_s)}
           </td>
           <td>
             #{parameters}
@@ -344,10 +377,10 @@ class Builders::ComponentGenerator < SiteBuilder
       <<~HTML
         <tr>
           <td>
-            <code>#{part.name}</code>
+            <code>#{part["name"]}</code>
           </td>
           <td>
-            #{part.description.to_s.empty? ? empty_property : markdownify(part.description)}
+            #{part["description"].to_s.empty? ? empty_property : markdownify(part["description"])}
           </td>
         </tr>
       HTML
@@ -372,3 +405,4 @@ class Builders::ComponentGenerator < SiteBuilder
     HTML
   end
 end
+

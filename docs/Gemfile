@@ -41,9 +41,6 @@ gem "asset_mapper", "~> 1.0"
 
 gem "rack-cors", "~> 2.0"
 
-gem "custom_elements_manifest_parser", "~> 0.2.8"
-# gem "custom_elements_manifest_parser", path: "../../custom_elements_manifest_parser"
-
 gem "debug", "~> 1.8", :group => :development
 
 gem "solargraph", :group => :development
