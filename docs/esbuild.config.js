@@ -31,10 +31,10 @@ const componentNames = glob
 
 const components = {};
 
-componentNames.forEach((name) => {
-  components[`diff-view-element/exports/components/${name}/${name}`] =
-    `../exports/components/${name}/${name}.js`;
-});
+// componentNames.forEach((name) => {
+//   components[`diff-view-element/exports/components/${name}/${name}`] =
+//     `../exports/components/${name}/${name}.js`;
+// });
 
 const esbuildOptions = {
   target: "es2020",

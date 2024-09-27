@@ -74,7 +74,7 @@ export class CodepenButton extends LitElement {
 
   constructor () {
     super()
-    this.projectTitle = "diff-view-element-starter",
+    this.projectTitle = "{{ packageName }}-starter",
     this.projectDescription = "diff view element playground"
     this.html = ""
     this.css = ""
@@ -86,7 +86,7 @@ export class CodepenButton extends LitElement {
   }
 
   get preamble () {
-    return `<script type="module" src="https://cdn.jsdelivr.net/npm/diff-view-element@${this.versionNumber}/cdn/exports/index.js"></script>` + "\n"
+    return `<script type="module" src="https://cdn.jsdelivr.net/npm/{{ packageName }}@${this.versionNumber}/cdn/exports/index.js"></script>` + "\n"
   }
 
   get postamble () {

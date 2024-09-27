@@ -16,7 +16,7 @@ template_engine: erb
 
 <%# This is needed because npm does not like the "link:./" protocol from PNPM. %>
 <% package_json = JSON.parse(hash["package.json"]) %>
-<% package_json["devDependencies"].delete("diff-view-element") %>
+<% package_json["devDependencies"].delete("{{ packageName }}") %>
 <% hash["package.json"] = JSON.pretty_generate(package_json) %>
 
 <%= hash.to_json.to_s.html_safe %>

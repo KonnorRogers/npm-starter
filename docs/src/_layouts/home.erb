@@ -21,24 +21,6 @@ layout: default
     <% end %>
   </ul>
 
-<diff-view-element
-  language="javascript"
-></diff-view-element>
-
-<script type="module">
-  ;(async () => {
-    const viewer = document.querySelector("diff-view-element")
-    const newValue = await (await fetch("https://raw.githubusercontent.com/praneshr/react-diff-viewer/master/examples/src/diff/javascript/new.rjs")).text()
-
-    const oldValue = await (await fetch("https://raw.githubusercontent.com/praneshr/react-diff-viewer/master/examples/src/diff/javascript/old.rjs")).text()
-    viewer.oldValue = oldValue
-    viewer.newValue = newValue
-  })()
-</script>
-
-
-
-
   <h2 class="reason__header" style="margin-top: 2rem; text-align: center; font-size: 1.35em;"><%= resource.data.reason_header %></h2>
 
   <section class="reason__grid">

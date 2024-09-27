@@ -1,4 +1,4 @@
-import "diff-view-element";
+import "{{ packageName }}";
 import "./src/stackblitz-button.js"
 import "./src/codepen-button.js"
 import "../styles/index.css";

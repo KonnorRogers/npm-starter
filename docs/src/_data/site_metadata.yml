@@ -5,11 +5,11 @@
 # in the templates via {{ site.metadata.myvariable }}.
 
 title: A kit for reading diffs
-logo: "diff-view-element"
+logo: "{{ packageName }}"
 slogan: Diff with ease
 email: konnor5456@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Diff with ease
-github_url: https://github.com/konnorrogers/diff-view-element
+github_url: https://github.com/konnorrogers/{{ packageName }}
 default_branch: main
 doc_location: docs/src

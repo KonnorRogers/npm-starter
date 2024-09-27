@@ -73,11 +73,11 @@ export class StackblitzButton extends LitElement {
 
   constructor () {
     super()
-    this.projectTitle = "diff-view-element-starter",
+    this.projectTitle = "{{ packageName }}-starter",
     this.projectDescription = "diff view element playground",
     this.files = {
       ".gitignore": this.gitIgnore(),
-      ["main.js"]: `import "diff-view-element"`,
+      ["main.js"]: `import "{{ packageName }}"`,
       ["index.html"]: this.indexHTML(),
       ["package.json"]: this.packageJSON(),
     }
@@ -108,10 +108,10 @@ export class StackblitzButton extends LitElement {
 
         // Vendor files on localhost
         if (this.isLocal) {
-          const vendored_files = await (await fetch("/diff-view-element/vendor.json")).json()
+          const vendored_files = await (await fetch("/{{ packageName }}/vendor.json")).json()
 
           Object.entries(vendored_files).forEach(([filename, content]) => {
-            this.files[`vendor/diff-view-element/${filename}`] = content
+            this.files[`vendor/{{ packageName }}/${filename}`] = content
           })
         } else {
           // Use a version number for all others.
@@ -152,9 +152,9 @@ dist-ssr
   }
 
   packageJSON () {
-    const version = this.isLocal ? "file:./vendor/diff-view-element" : document.querySelector("meta[name='version-number']").content
+    const version = this.isLocal ? "file:./vendor/{{ packageName }}" : document.querySelector("meta[name='version-number']").content
     return `{
-      "name": "diff-view-element-starter",
+      "name": "{{ packageName }}-starter",
       "private": true,
       "version": "0.0.0",
       "type": "module",
@@ -164,7 +164,7 @@ dist-ssr
         "preview": "vite preview"
       },
       "dependencies": {
-        "diff-view-element": "${version}"
+        "{{ packageName }}": "${version}"
       },
       "devDependencies": {
         "vite": "^5.4.0"
